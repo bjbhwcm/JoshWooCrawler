@@ -8,7 +8,7 @@ import os
 import time
 import hashlib
 
-global_url = "https://photo.sina.com.cn/"
+global_url = "http://image.baidu.com/search/index?tn=baiduimage&ps=1&ct=201326592&lm=-1&cl=2&nc=1&ie=utf-8&word=%E5%9B%BE%E7%89%87"
 username=""
 password=""
 pic_suffix = [".jpg",".png",".jpeg",".JPG",".JPEG",".PNG",".gif",".GIF",]
@@ -65,16 +65,17 @@ def getPic(pic_url_dict,):
         m.update(str(time.time()).encode("utf-8"))
         pic_name = savepath + "\\"+ m.hexdigest() + get_pic_suffix(i)
         res = get_resp(i)
-        f = open(pic_name,"wb")
-        f.write(res.read())
-        f.close()
+        if res is not None:
+            f = open(pic_name,"wb")
+            f.write(res.read())
+            f.close()
 
 #def get_recur_urls(other_url_dict):
 
 
 def crawl_pics(global_url):
     res = get_resp(global_url)
-    if not res:
+    if res is None:
         return None
     try:
         res_str = res.read().decode("utf-8")
