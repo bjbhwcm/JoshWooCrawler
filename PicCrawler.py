@@ -1,25 +1,25 @@
 # -*- coding: utf-8 -*-
 
 #author joshwoo
-import json
-import base64
 from urllib import request
 import urllib
 import re
-import datetime
 import os
 import time
+import hashlib
 
 global_url = "https://photo.sina.com.cn/"
 username=""
 password=""
 pic_suffix = [".jpg",".png",".jpeg",".JPG",".JPEG",".PNG",".gif",".GIF",]
 savepath = os.getcwd() + "\\picture\\"
-pic_count = 0
 
 def get_resp(url):
-    resp = urllib.request.urlopen(url)
-    return  resp
+    try:
+        resp = urllib.request.urlopen(url)
+        return  resp
+    except Exception:
+        return None
 
 def get_all_urls(resp_str):
     redict = []
@@ -59,24 +59,38 @@ def get_urls_with_pic_suffix(url_dict):
             other_urls.append(i)
     return pic_urls,other_urls
 
-def getPic(pic_url_dict,pic_count):
+def getPic(pic_url_dict,):
+    m = hashlib.md5()
     for i in pic_url_dict:
-        pic_name = savepath + "\\"+ str(pic_count) + get_pic_suffix(i)
+        m.update(str(time.time()).encode("utf-8"))
+        pic_name = savepath + "\\"+ m.hexdigest() + get_pic_suffix(i)
         res = get_resp(i)
         f = open(pic_name,"wb")
         f.write(res.read())
         f.close()
-        pic_count = pic_count + 1
+
+#def get_recur_urls(other_url_dict):
+
 
 def crawl_pics(global_url):
-    res = get_resp(global_url).read().decode("utf-8")
-    all_urls_dict = get_all_urls(res)
+    res = get_resp(global_url)
+    if not res:
+        return None
+    try:
+        res_str = res.read().decode("utf-8")
+    except Exception:
+        return None
+    all_urls_dict = get_all_urls(res_str)
+    if len(all_urls_dict) == 0:
+        return None
     pic_url_dict, other_url_dict = get_urls_with_pic_suffix(all_urls_dict)
-    getPic(pic_url_dict,pic_count)
-
+    if len(pic_url_dict) == 0:
+        return None
+    getPic(pic_url_dict)
+    if len(other_url_dict) == 0:
+        return None
+    for i in other_url_dict:
+        crawl_pics(i)
 
 if __name__ == "__main__":
-   res = get_resp(global_url).read().decode("utf-8")
-   all_urls_dict = get_all_urls(res)
-   pic_url_dict,other_url_dict = get_urls_with_pic_suffix(all_urls_dict)
-   getPic(pic_url_dict,pic_count)
+    crawl_pics(global_url)
